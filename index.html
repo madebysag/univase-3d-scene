@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>3D Scene</title>
+	<style type="text/css">
+		* {
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			background: black;
+			overflow: hidden;
+		}
+		canvas{
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+	<script type="importmap">
+		{
+		  "imports": {
+		    "three": "https://cdn.jsdelivr.net/npm/three@v0.176.0/build/three.module.js",
+		    "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.176.0/examples/jsm/"
+		  }
+		}
+		</script>
+</head>
+<body>
+	<canvas></canvas>
+
+	<script type="module">
+		import * as THREE from "three"
+		import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+
+		const canvas = document.querySelector("canvas")
+
+		const scene = new THREE.Scene()
+
+		const gltfLoader = new GLTFLoader()
+
+		const texture = new THREE.TextureLoader().load("./vase-atlas-psd.jpg")
+
+		texture.flipY = false
+
+		gltfLoader.load(
+			"./vases1.glb",
+			(gltf) => {
+
+				const material = new THREE.MeshBasicMaterial({map: texture, side: THREE.DoubleSide})
+
+
+				gltf.scene.children[0].material = material
+				gltf.scene.children[0].rotation.y = 0.5
+				scene.add(gltf.scene.children[0])
+
+			})		
+
+
+		const sizes = {
+		    width: window.innerWidth,
+		    height: window.innerHeight
+		}
+
+		const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
+		camera.position.set(0, 2, -10)
+		scene.add(camera)
+
+		// Controls
+		const controls = new OrbitControls(camera, canvas)
+		controls.target.set(0, 0.75, 0)
+		controls.enableDamping = true
+
+		// Disable panning
+		controls.enablePan = false;
+
+		controls.maxDistance = 10;
+
+		// Limit vertical rotation (dome/hemisphere effect)
+		controls.minPolarAngle = -Math.PI / 2;
+		controls.maxPolarAngle = Math.PI / 2;
+
+		// Limit horizontal rotation (fix at a certain angle)
+		controls.minAzimuthAngle = Math.PI - Math.PI / 8;
+		controls.maxAzimuthAngle = Math.PI  //- Math.PI / 8 ;
+
+
+		const renderer = new THREE.WebGLRenderer({
+		    canvas: canvas
+		})
+		renderer.shadowMap.enabled = true
+		renderer.shadowMap.type = THREE.PCFSoftShadowMap
+		renderer.setSize(sizes.width, sizes.height)
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+		const tick = () => {
+
+			renderer.render(scene, camera)
+
+			window.requestAnimationFrame(tick)
+		}
+
+		tick()
+
+		console.log(THREE)
+	</script>
+</body>
+</html>
